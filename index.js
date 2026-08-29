@@ -97,6 +97,8 @@ app.get("/health", (req, res) => {
   });
 });
 
+app.use("/api", ensureDBConnection);
+
 app.use("/api/auth", authRoutes);
 app.use("/api/exams", examRoutes);
 
@@ -121,28 +123,29 @@ app.use(notFound);
 // Error handling middleware - must be last
 app.use(errorHandler);
 
-// Connect to databases first, then start server
+// Start the HTTP server immediately so the port is open (and health checks
+// / cold-start pings succeed) without waiting on MongoDB. DB-dependent
+// routes are gated by ensureDBConnection until the connection below is ready.
+app.listen(PORT, () => {
+  console.log(` Server running on port ${PORT}`);
+  console.log(` API docs: http://localhost:${PORT}/api-docs`);
+});
+
+// Connect to databases / init services in the background
 (async () => {
   try {
-    console.log(" Starting CADNA Backend...");
+    console.log(" Starting CADNA Backend background initialization...");
 
     // Connect Redis (non-blocking)
     connectRedis().catch((err) => console.warn("Redis failed:", err.message));
 
-    // Connect MongoDB (blocking)
+    // Connect MongoDB
     await connectDB();
 
-    // Initialize AI Service 
+    // Initialize AI Service
     await aiService.initialize();
-
-    // Start server only after DB is ready
-    app.listen(PORT, () => {
-      console.log(` Server running on port ${PORT}`);
-      console.log(` API docs: http://localhost:${PORT}/api-docs`);
-    });
   } catch (error) {
-    console.error(" Failed to start server:", error.message);
-    process.exit(1);
+    console.error(" Background initialization failed:", error.message);
   }
 })();
 

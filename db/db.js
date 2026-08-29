@@ -2,7 +2,9 @@ import mongoose from 'mongoose';
 
 mongoose.set('strictQuery', false);
 
-const connectDB = async () => {
+const MAX_RETRIES = 5;
+
+const connectDB = async (retryCount = 0) => {
   try {
     console.log('Connecting to MongoDB...');
     
@@ -37,13 +39,17 @@ const connectDB = async () => {
     return conn;
   } catch (err) {
     console.error(' MongoDB connection failed:', err.message);
-    
+
     if (process.env.NODE_ENV === 'production') {
-      console.log('🔄 Retrying connection in 10 seconds...');
+      if (retryCount >= MAX_RETRIES) {
+        console.error(`❌ MongoDB connection failed after ${MAX_RETRIES} retries. Giving up.`);
+        throw err;
+      }
+      console.log(`🔄 Retrying connection in 10 seconds... (attempt ${retryCount + 1}/${MAX_RETRIES})`);
       await new Promise(resolve => setTimeout(resolve, 10000));
-      return connectDB(); // Retry
+      return connectDB(retryCount + 1); // Retry
     }
-    
+
     throw err;
   }
 };
