@@ -20,6 +20,7 @@ import seedRoutes from "./routes/seedRoutes.js";
 import aiRoutes from "./routes/aiRoutes-vercel.js";
 import aiService from "./services/ai/AIService-vercel.js";
 import studyResourceRoutes from "./routes/studyResourceRoutes.js";
+import timelineRoutes from "./routes/timelineRoutes.js";
 
 dotenv.config();
 
@@ -33,13 +34,25 @@ const allowedOrigins = new Set([
   "http://localhost:5173",
   "http://127.0.0.1:5173",
   "http://127.0.0.1:3000",
-  "https://exam-genius-cadna-p7raj245e-ifeanyis-projects-30bb4f9f.vercel.app",
+  "https://cadna-frontend.vercel.app",
   "https://exam-genius-cadna-five.vercel.app",
 ]);
 
 const isAllowedOrigin = (origin) => {
   if (!origin) return true; // non-browser tools (e.g., curl, Postman)
   if (allowedOrigins.has(origin)) return true;
+
+  // Dev-only: trust any localhost/127.0.0.1 port so a drifting Vite port
+  // (or any other local dev server) doesn't need to be added here manually.
+  if (process.env.NODE_ENV !== "production") {
+    try {
+      const { hostname } = new URL(origin);
+      if (hostname === "localhost" || hostname === "127.0.0.1") return true;
+    } catch {
+      // fall through to the production checks below
+    }
+  }
+
   try {
     const { hostname } = new URL(origin);
     return hostname.endsWith(".vercel.app");
@@ -115,6 +128,7 @@ app.use("/api/results", resultRoutes);
 app.use("/api/admin", seedRoutes);
 app.use("/api/ai", aiRoutes);
 app.use("/api/study-resources", studyResourceRoutes);
+app.use("/api/timeline", timelineRoutes);
 
 
 // 404 handler - must be after all routes

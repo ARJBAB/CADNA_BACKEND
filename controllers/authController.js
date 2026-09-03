@@ -21,7 +21,7 @@ const isProd = NODE_ENV === "production";
 const refreshCookieOptions = {
   httpOnly: true,
   secure: isProd,
-  sameSite: "lax",
+  sameSite: isProd ? "none" : "lax",
   maxAge: (() => {
     const r = REFRESH_EXPIRES;
     const num = parseInt(r.slice(0, -1), 10);
