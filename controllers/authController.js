@@ -63,6 +63,7 @@ export const register = asyncHandler(async (req, res) => {
     role = "student",
     university,
     studentId,
+    organizationName,
   } = req.body;
 
   const missing = [];
@@ -95,6 +96,7 @@ export const register = asyncHandler(async (req, res) => {
     role,
     university,
     studentId,
+    organizationName: role === "instructor" ? organizationName : undefined,
   });
 
   const accessToken = signAccessToken(user._id.toString(), user.role);
@@ -121,6 +123,7 @@ export const register = asyncHandler(async (req, res) => {
     role: user.role,
     university: user.university,
     studentId: user.studentId,
+    organizationName: user.organizationName,
   };
   return res.status(201).json({
     success: true,
@@ -194,6 +197,7 @@ export const login = asyncHandler(async (req, res) => {
     role: user.role,
     university: user.university,
     studentId: user.studentId,
+    organizationName: user.organizationName,
   };
   return res.json({
     success: true,
@@ -271,6 +275,7 @@ export const verify2faLogin = asyncHandler(async (req, res) => {
     role: user.role,
     university: user.university,
     studentId: user.studentId,
+    organizationName: user.organizationName,
   };
   return res.json({
     success: true,
@@ -482,6 +487,7 @@ export const me = asyncHandler(async (req, res) => {
     role: req.user.role,
     university: req.user.university,
     studentId: req.user.studentId,
+    organizationName: req.user.organizationName,
     twoFAEnabled: req.user.twoFAEnabled,
   };
   return res.json({ success: true, data: safeUser });
